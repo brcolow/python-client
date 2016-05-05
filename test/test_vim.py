@@ -22,7 +22,8 @@ def test_command():
     vim.command('w')
     ok(os.path.isfile(fname))
     eq(open(fname).read(), 'testing\npython\napi\n')
-    os.unlink(fname)
+    if os.name != 'nt':
+        os.unlink(fname)
 
 
 @with_setup
@@ -63,8 +64,10 @@ def test_strwidth():
 @with_setup(setup=cleanup)
 def test_chdir():
     pwd = vim.eval('getcwd()')
+    root = os.path.abspath(os.sep)
+    # We can chdir to '/' on Windows, but then the pwd will be the root drive
     vim.chdir('/')
-    eq(vim.eval('getcwd()'), '/')
+    eq(vim.eval('getcwd()'), root)
     vim.chdir(pwd)
     eq(vim.eval('getcwd()'), pwd)
 
