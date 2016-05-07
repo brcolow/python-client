@@ -87,10 +87,21 @@ class AsyncioEventLoop(BaseEventLoop, asyncio.Protocol,
         self._loop.run_until_complete(coroutine)
 
     def _connect_stdio(self):
-        coroutine = self._loop.connect_read_pipe(self._fact, sys.stdin)
-        self._loop.run_until_complete(coroutine)
-        coroutine = self._loop.connect_write_pipe(self._fact, sys.stdout)
-        self._loop.run_until_complete(coroutine)
+        async def aio_readline_stdin(loop):
+            while True:
+                line = await loop.run_in_executor(None, sys.stdin.readline)
+                print('Got line:', line, end='')
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(aio_readline_stdin(loop))
+
+        async def aio_readline_stdout(loop):
+            while True:
+                line = await loop.run_in_executor(None, sys.stdout.readline)
+                print('Got line:', line, end='')
+
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(aio_readline_stdout(loop))
 
     def _connect_child(self, argv):
         coroutine = self._loop.subprocess_exec(self._fact, *argv)
